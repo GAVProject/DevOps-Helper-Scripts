@@ -109,6 +109,12 @@ get_configuration() {
 update_system() {
     print_step "Обновление системы"
     
+    # Настройка неинтерактивного режима для предотвращения диалогов
+    export DEBIAN_FRONTEND=noninteractive
+    
+    # Настройка dpkg для автоматического разрешения конфликтов конфигурационных файлов
+    echo 'DPkg::options { "--force-confdef"; "--force-confnew"; }' | sudo tee /etc/apt/apt.conf.d/50unattended-upgrades-dpkg > /dev/null
+    
     print_info "Обновление списка пакетов..."
     sudo apt update
     
@@ -119,12 +125,18 @@ update_system() {
     sudo apt autoremove -y
     sudo apt autoclean
     
+    # Очистка временной конфигурации
+    sudo rm -f /etc/apt/apt.conf.d/50unattended-upgrades-dpkg
+    
     print_success "Система успешно обновлена"
 }
 
 # Установка необходимых пакетов
 install_packages() {
     print_step "Установка необходимых пакетов"
+    
+    # Настройка неинтерактивного режима
+    export DEBIAN_FRONTEND=noninteractive
     
     local packages=(
         "curl"
