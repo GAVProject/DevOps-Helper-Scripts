@@ -20,21 +20,33 @@
 
 #### Использование
 
-1. **Загрузите скрипт на ваш VPS:**
-   ```bash
-   scp scripts/setup-ubuntu-user.sh root@ваш_ip_сервера:/tmp/
-   ```
+**Способ 1: Прямой запуск с GitHub (рекомендуется)**
 
-2. **Подключитесь к VPS от имени root:**
-   ```bash
-   ssh root@ваш_ip_сервера
-   ```
+Запуск скрипта напрямую с GitHub без предварительного скачивания:
 
-3. **Сделайте скрипт исполняемым и запустите:**
-   ```bash
-   chmod +x /tmp/setup-ubuntu-user.sh
-   /tmp/setup-ubuntu-user.sh
-   ```
+```bash
+# Подключитесь к VPS от имени root
+ssh root@ваш_ip_сервера
+
+# Скачайте и выполните скрипт одной командой
+curl -fsSL https://raw.githubusercontent.com/GAVProject/DevOps-Helper-Scripts/refs/heads/main/scripts/setup-ubuntu-user.sh | bash
+```
+
+**Способ 2: Скачивание с проверкой**
+
+Для дополнительной безопасности можете сначала скачать и проверить скрипт:
+
+```bash
+# Скачайте скрипт
+wget https://raw.githubusercontent.com/GAVProject/DevOps-Helper-Scripts/refs/heads/main/scripts/setup-ubuntu-user.sh
+
+# Проверьте содержимое
+cat setup-ubuntu-user.sh
+
+# Сделайте исполняемым и запустите
+chmod +x setup-ubuntu-user.sh
+./setup-ubuntu-user.sh
+```
 
 #### Что делает скрипт
 
