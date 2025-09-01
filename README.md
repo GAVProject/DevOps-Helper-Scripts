@@ -20,33 +20,42 @@
 
 #### Использование
 
-**Способ 1: Прямой запуск с GitHub (рекомендуется)**
+**Способ 1: Скачивание с проверкой (рекомендуется)**
 
-Запуск скрипта напрямую с GitHub без предварительного скачивания:
+Для безопасности и корректной работы интерактивного режима сначала скачайте и проверьте скрипт:
 
 ```bash
 # Подключитесь к VPS от имени root
 ssh root@ваш_ip_сервера
 
-# Скачайте и выполните скрипт одной командой
-curl -fsSL https://raw.githubusercontent.com/GAVProject/DevOps-Helper-Scripts/refs/heads/main/scripts/setup-ubuntu-user.sh | bash
-```
-
-**Способ 2: Скачивание с проверкой**
-
-Для дополнительной безопасности можете сначала скачать и проверить скрипт:
-
-```bash
 # Скачайте скрипт
 wget https://raw.githubusercontent.com/GAVProject/DevOps-Helper-Scripts/refs/heads/main/scripts/setup-ubuntu-user.sh
 
-# Проверьте содержимое
+# Проверьте содержимое (опционально)
 cat setup-ubuntu-user.sh
 
 # Сделайте исполняемым и запустите
 chmod +x setup-ubuntu-user.sh
 ./setup-ubuntu-user.sh
 ```
+
+**Способ 2: Скачивание через curl**
+
+Альтернативный способ скачивания с использованием curl:
+
+```bash
+# Скачайте скрипт
+curl -fsSL https://raw.githubusercontent.com/GAVProject/DevOps-Helper-Scripts/refs/heads/main/scripts/setup-ubuntu-user.sh -o setup-ubuntu-user.sh
+
+# Проверьте содержимое (опционально)
+cat setup-ubuntu-user.sh
+
+# Сделайте исполняемым и запустите
+chmod +x setup-ubuntu-user.sh
+./setup-ubuntu-user.sh
+```
+
+> **Важно:** Избегайте выполнения интерактивных скриптов через `curl | bash` или `wget | bash`, так как это может подавлять запросы на ввод данных.
 
 #### Что делает скрипт
 
