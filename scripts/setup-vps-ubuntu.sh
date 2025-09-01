@@ -264,7 +264,7 @@ setup_ssh() {
     
     # Проверка конфигурации
     if sudo sshd -t; then
-        sudo systemctl restart sshd
+        sudo systemctl restart ssh
         print_success "SSH настроен и перезапущен"
         if [[ -n "$NEW_SSH_PORT" ]]; then
             print_warning "SSH порт изменен на $NEW_SSH_PORT. Используйте: ssh -p $NEW_SSH_PORT пользователь@сервер"
@@ -272,7 +272,7 @@ setup_ssh() {
     else
         print_error "Ошибка в конфигурации SSH. Восстанавливаем резервную копию..."
         sudo cp /etc/ssh/sshd_config.backup.* /etc/ssh/sshd_config
-        sudo systemctl restart sshd
+        sudo systemctl restart ssh
     fi
 }
 
@@ -412,7 +412,7 @@ display_summary() {
     
     echo
     echo "📊 Статус сервисов:"
-    echo "  • SSH: $(systemctl is-active sshd)"
+    echo "  • SSH: $(systemctl is-active ssh)"
     echo "  • UFW: $(systemctl is-active ufw)"
     echo "  • Fail2Ban: $(systemctl is-active fail2ban)"
     
