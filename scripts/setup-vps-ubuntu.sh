@@ -244,10 +244,6 @@ setup_ssh() {
         echo "Protocol 2" | sudo tee -a "$ssh_config"
     fi
     
-    if ! grep -q "MaxAuthTries" "$ssh_config"; then
-        echo "MaxAuthTries 3" | sudo tee -a "$ssh_config"
-    fi
-    
     if ! grep -q "ClientAliveInterval" "$ssh_config"; then
         echo "ClientAliveInterval 300" | sudo tee -a "$ssh_config"
         echo "ClientAliveCountMax 2" | sudo tee -a "$ssh_config"
@@ -255,8 +251,18 @@ setup_ssh() {
     
     # Изменение порта SSH если требуется
     if [[ -n "$NEW_SSH_PORT" ]]; then
-        sudo sed -i "s/#Port 22/Port $NEW_SSH_PORT/" "$ssh_config"
-        print_info "SSH порт изменен на $NEW_SSH_PORT"
+        print_warning "ВНИМАНИЕ: Изменение SSH порта может заблокировать доступ!"
+        print_warning "Убедитесь, что у вас есть альтернативный способ доступа (консоль провайдера)"
+        read -p "Продолжить изменение порта на $NEW_SSH_PORT? (y/n): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            print_info "Изменение порта SSH отменено"
+            NEW_SSH_PORT=""
+        else
+            sudo sed -i "s/#Port 22/Port $NEW_SSH_PORT/" "$ssh_config"
+            sudo sed -i "s/^Port 22/Port $NEW_SSH_PORT/" "$ssh_config"
+            print_info "SSH порт изменен на $NEW_SSH_PORT"
+        fi
     fi
     
     # Применение конфигурации
@@ -264,10 +270,46 @@ setup_ssh() {
     
     # Проверка конфигурации
     if sudo sshd -t; then
-        sudo systemctl restart ssh
-        print_success "SSH настроен и перезапущен"
-        if [[ -n "$NEW_SSH_PORT" ]]; then
-            print_warning "SSH порт изменен на $NEW_SSH_PORT. Используйте: ssh -p $NEW_SSH_PORT пользователь@сервер"
+        print_info "Конфигурация SSH проверена успешно"
+        
+        # Перезапуск SSH службы с проверкой
+        print_info "Перезапуск SSH службы..."
+        if sudo systemctl restart ssh; then
+            print_success "SSH служба успешно перезапущена"
+            
+            # Проверка статуса службы
+            if systemctl is-active --quiet ssh; then
+                print_success "SSH служба активна и работает"
+                
+                # Проверка прослушивания порта
+                sleep 2
+                if [[ -n "$NEW_SSH_PORT" ]]; then
+                    if sudo ss -tuln | grep -q ":$NEW_SSH_PORT "; then
+                        print_success "SSH слушает на порту $NEW_SSH_PORT"
+                        print_warning "ВАЖНО: Новое подключение: ssh -p $NEW_SSH_PORT пользователь@сервер"
+                        print_warning "Сохраните текущее подключение до проверки нового!"
+                    else
+                        print_error "SSH не слушает на новом порту $NEW_SSH_PORT"
+                        print_info "Восстанавливаем стандартный порт..."
+                        sudo sed -i "s/^Port $NEW_SSH_PORT/#Port 22/" /etc/ssh/sshd_config
+                        sudo systemctl restart ssh
+                    fi
+                else
+                    if sudo ss -tuln | grep -q ":22 "; then
+                        print_success "SSH слушает на стандартном порту 22"
+                    fi
+                fi
+            else
+                print_error "SSH служба не активна после перезапуска"
+                print_info "Восстанавливаем резервную копию..."
+                sudo cp /etc/ssh/sshd_config.backup.* /etc/ssh/sshd_config
+                sudo systemctl restart ssh
+            fi
+        else
+            print_error "Ошибка перезапуска SSH службы"
+            print_info "Восстанавливаем резервную копию..."
+            sudo cp /etc/ssh/sshd_config.backup.* /etc/ssh/sshd_config
+            sudo systemctl restart ssh
         fi
     else
         print_error "Ошибка в конфигурации SSH. Восстанавливаем резервную копию..."
@@ -313,7 +355,9 @@ setup_auto_updates() {
         sudo apt install -y unattended-upgrades
         
         print_info "Настройка автоматических обновлений безопасности..."
-        sudo dpkg-reconfigure -plow unattended-upgrades
+        # Автоматическая настройка без интерактивных диалогов
+        echo 'unattended-upgrades unattended-upgrades/enable_auto_updates boolean true' | sudo debconf-set-selections
+        sudo dpkg-reconfigure -f noninteractive unattended-upgrades
         
         # Настройка конфигурации
         sudo tee /etc/apt/apt.conf.d/20auto-upgrades > /dev/null <<EOF
