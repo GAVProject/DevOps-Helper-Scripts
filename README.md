@@ -39,7 +39,7 @@ cat setup-vps-ubuntu.sh
 
 # Сделайте исполняемыми и запустите основной скрипт
 chmod +x setup-vps-ubuntu.sh
-./setup-vps-ubuntu.sh
+sudo ./setup-vps-ubuntu.sh
 ```
 
 **Способ 2: Скачивание через curl**
